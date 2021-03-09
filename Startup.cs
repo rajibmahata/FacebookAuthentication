@@ -59,6 +59,23 @@ namespace SocialMediaAuthentication
                     }
                 };
             });
+
+            services.AddAuthentication().AddGoogle(googleOptions =>
+            {
+                googleOptions.ClientId = Configuration["Authentication:Google:ClientId"];
+                googleOptions.ClientSecret = Configuration["Authentication:Google:ClientSecret"];
+
+                googleOptions.Events = new OAuthEvents()
+                {
+                    OnRemoteFailure = loginFailureHandler =>
+                    {
+                        var authProperties = googleOptions.StateDataFormat.Unprotect(loginFailureHandler.Request.Query["state"]);
+                        loginFailureHandler.Response.Redirect("/Identity/Account/Login");
+                        loginFailureHandler.HandleResponse();
+                        return Task.FromResult(0);
+                    }
+                };
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
